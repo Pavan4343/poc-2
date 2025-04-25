@@ -29,7 +29,6 @@ on:
 env:
   imageName: genix/poc
   dockerFile: Dockerfile
-  registry: ${{ secrets.AZURE_ACR_NAME }}.azurecr.io
 
 jobs:
   build:
@@ -54,7 +53,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: buildOutputDirectory
-          path: ${{ env.Docker }}
+          path: .
 
       - name: Generate Docker Tag
         id: gen-tag
@@ -66,6 +65,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: npm install
 
       - name: Run Tests with Coverage
         run: npm test -- --coverage
@@ -84,6 +86,8 @@ jobs:
   docker:
     needs: [build, sonar-test]
     runs-on: ubuntu-latest
+    env:
+      registry: ${{ secrets.AZURE_ACR_NAME }}.azurecr.io
     steps:
       - uses: actions/checkout@v4
 
@@ -113,6 +117,8 @@ jobs:
     needs: docker
     if: github.event.inputs.TrivyScan == 'true'
     runs-on: ubuntu-latest
+    env:
+      registry: ${{ secrets.AZURE_ACR_NAME }}.azurecr.io
     steps:
       - name: Install Trivy
         run: |
@@ -129,6 +135,8 @@ jobs:
     needs: [docker, trivy-scan]
     if: github.event.inputs.Deployment == 'true'
     runs-on: ubuntu-latest
+    env:
+      registry: ${{ secrets.AZURE_ACR_NAME }}.azurecr.io
     steps:
       - name: Set Environment Variables
         id: vars
@@ -147,9 +155,9 @@ jobs:
           else
             echo "env_scope=Dev" >> $GITHUB_OUTPUT
 
-      - name: Deploy to Kubernetes (or VM)
+      - name: Deploy to Kubernetes or VM
         run: |
           echo "Deploying image: ${{ steps.vars.outputs.image_url }}"
           echo "Environment: ${{ steps.env.outputs.env_scope }}"
-          # Example: helm upgrade or kubectl apply
+          # Example deployment logic
           # ./scripts/deploy.sh "${{ steps.vars.outputs.image_url }}" "${{ steps.env.outputs.env_scope }}"
