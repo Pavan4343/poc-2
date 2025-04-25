@@ -7,7 +7,7 @@ on:
       - 'releases/**/staging'
       - 'releases/**/stable'
     paths-ignore:
-      - 'README.md' #ignororing this file
+      - 'README.md'
   workflow_dispatch:
     inputs:
       SonarQubeScan:
