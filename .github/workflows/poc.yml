@@ -1,4 +1,4 @@
-name: Build and Deploy NodeJS Application
+name: POC NodeJS Application
 
 on:
   push:
@@ -95,11 +95,7 @@ jobs:
   docker:
     needs: [build, sonar-test]
     runs-on: ubuntu-latest
-    env:
-      registry: ${{ secrets.AZURE_ACR_NAME }}.azurecr.io
     steps:
-      - uses: actions/checkout@v4
-
       - name: Download build artifact
         uses: actions/download-artifact@v3
         with:
